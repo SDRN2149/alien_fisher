@@ -1,0 +1,562 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>외계어부 v0.41</title>
+<style>
+:root{
+  --bg:#0c1420;--panel:#142033;--panel2:#1a2a41;--line:#33465f;--text:#e7f0f8;
+  --muted:#9fb1c3;--accent:#9de7d7;--accent2:#f5d98f;--good:#9ee6a5;--blue:#8fc8ff;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;min-height:100vh;background:
+  radial-gradient(circle at 50% -10%,rgba(110,170,210,.15),transparent 42rem),var(--bg);
+  color:var(--text);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Noto Sans Mono CJK KR",monospace;
+  display:flex;justify-content:center;padding:18px;
+}
+button{font:inherit}
+.app{width:min(1220px,100%);display:grid;gap:14px}
+.top{
+  display:flex;gap:12px;align-items:center;justify-content:space-between;
+  border:1px solid var(--line);background:rgba(20,32,51,.94);padding:12px 14px;border-radius:14px;
+}
+.brand{font-weight:800;font-size:18px}.version{color:var(--muted);font-size:12px}
+.stats{display:flex;gap:14px;flex-wrap:wrap;font-size:14px}
+.stats span:nth-child(1){color:var(--accent2)}
+.stats span:nth-child(2){color:var(--good)}
+.stats span:nth-child(3){color:var(--blue)}
+.stats span:nth-child(4){color:#d8b6ff}
+.grid{display:grid;grid-template-columns:minmax(0,1.75fr) minmax(300px,.75fr);gap:14px}
+.panel{border:1px solid var(--line);background:rgba(20,32,51,.92);border-radius:16px;overflow:hidden}
+.panel h2{margin:0;padding:11px 14px;font-size:14px;border-bottom:1px solid var(--line);color:var(--accent)}
+.scene{padding:14px}
+pre{
+  margin:0;white-space:pre;overflow:hidden;line-height:1.16;font-size:clamp(12px,1.55vw,18px);
+  color:#d8f4f0;background:#08111c;border:1px solid #26384f;border-radius:14px;padding:18px;min-height:460px;user-select:none;
+}
+.controls{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr 1fr;gap:9px;margin-top:12px}
+.controls button,.smallbtn,.shopbtn{
+  border:1px solid var(--line);background:var(--panel2);color:var(--text);border-radius:10px;padding:12px;cursor:pointer
+}
+.controls button:hover,.smallbtn:hover,.shopbtn:hover{filter:brightness(1.1)}
+.primary{background:#183d42!important;border-color:#3f7777!important;color:#d7fff7!important;font-weight:700}
+.key{opacity:.72;font-size:11px;margin-left:6px;border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.log{
+  margin-top:12px;padding:12px;border:1px dashed var(--line);border-radius:10px;min-height:86px;
+  color:#c8d5e2;font-size:14px;line-height:1.55
+}
+.side{display:grid;gap:14px;align-content:start}.content{padding:12px 14px}
+.fish-card,.shop-card{
+  padding:11px 12px;background:#0f1928;border:1px solid #2a3d56;border-radius:10px;margin-bottom:8px
+}
+.fish-card b,.shop-card b{color:var(--accent2)}
+.fish-card small,.shop-card small{display:block;color:var(--muted);margin-top:5px;line-height:1.45}
+.empty{color:var(--muted);font-size:13px}
+.badge{
+  display:inline-block;border:1px solid var(--line);border-radius:999px;padding:2px 7px;margin-left:5px;font-size:11px;color:var(--muted)
+}
+.eco-wrap{display:grid;gap:8px}
+.bar{height:12px;background:#08111c;border:1px solid #33465f;border-radius:999px;overflow:hidden}
+.bar>div{height:100%;width:0%;background:var(--good);transition:width .2s}
+.eco-meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px}
+.unlocks{font-size:12px;line-height:1.5;color:#c6d5e2;margin-top:10px}
+.footer{text-align:center;color:#71859a;font-size:12px;padding:4px 0 8px}
+.modal{
+  position:fixed;inset:0;background:rgba(3,7,12,.78);display:none;align-items:center;justify-content:center;padding:20px;z-index:20
+}
+.modal.show{display:flex}
+.modalbox,.gamebox{
+  width:min(700px,100%);border:1px solid var(--line);background:#101b2a;border-radius:18px;padding:20px
+}
+.catch-art{font-size:30px;text-align:center;padding:10px 0}
+.modalbox h3,.gamebox h3{margin:0 0 6px;color:var(--accent2)}
+.modalbox p,.gamebox p{color:#cbd8e5;line-height:1.55}
+.modal-actions{display:flex;gap:8px;margin-top:14px}.modal-actions button{flex:1}
+.rewardline{font-size:13px;color:#c9d9e7;margin-top:8px}
+.fish-lane{
+  position:relative;height:82px;border:1px solid #40536d;background:#08111c;border-radius:12px;overflow:hidden;margin:14px 0
+}
+.sweet-zone{position:absolute;left:32%;top:8px;width:36%;height:66px;background:rgba(158,230,165,.15);border:1px solid rgba(158,230,165,.8);border-radius:10px}
+.sweet-zone::after{content:"GOOD";position:absolute;inset:auto 0 4px;text-align:center;font-size:11px;color:rgba(190,245,198,.72)}
+.fish-marker{position:absolute;top:20px;left:12%;transform:translateX(-50%);font-size:30px}
+.hint{text-align:center;color:#b7c9d8;font-size:13px;line-height:1.5;min-height:40px}
+.timingbtn{width:100%;margin-top:14px;padding:15px;border-radius:11px;border:1px solid #55718f;background:#17324a;color:white;cursor:pointer;font-weight:700}
+.shopgrid{display:grid;grid-template-columns:1fr;gap:8px}
+.owned{color:var(--good)!important}.locked{opacity:.55}
+
+.save-info{
+  margin-top:10px;
+  color:var(--muted);
+  font-size:12px;
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.save-modal-actions{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:12px;
+}
+.danger{
+  border-color:#6a3d46!important;
+  background:#3a2028!important;
+  color:#ffd8de!important;
+}
+
+@media(max-width:860px){
+  body{padding:10px}.grid{grid-template-columns:1fr}.controls{grid-template-columns:1fr 1fr}.top{align-items:flex-start;flex-direction:column}
+  pre{min-height:390px;font-size:clamp(11px,2.4vw,16px)}
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="top">
+    <div>
+      <div class="brand">🪐 외계어부</div>
+      <div class="version">v0.41 · 브라우저 저장 기능</div>
+    </div>
+    <div class="stats">
+      <span>💰 <b id="credits">120</b> cr</span>
+      <span>🌱 <b id="ecoPoints">0</b> 생태점수</span>
+      <span>🔬 <b id="research">0</b> 연구</span>
+      <span>📖 <b id="dexCount">0</b>/8</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>현재 위치 · 세레스-4 / 푸른 얕은 바다</h2>
+      <div class="scene">
+        <pre id="ascii"></pre>
+        <div class="controls">
+          <button class="primary" id="fishBtn">🎣 낚시 시작 <span class="key">SPACE / ENTER</span></button>
+          <button id="restBtn">☕ 잠시 쉬기</button>
+          <button id="shopBtn">🛒 상점</button>
+          <button id="saveBtn">💾 저장</button>
+          <button id="clearBtn">🧹 기록 지우기</button>
+        </div>
+        <div class="log" id="log">
+          오늘도 조용한 바다다.<br>
+          팔면 장비를 사고, 놓아주면 이 바다의 생태가 풍성해진다.
+        </div>
+        <div class="save-info">
+          <span>💾 이 브라우저에 진행도가 저장됩니다.</span>
+          <span id="saveStatus">아직 저장되지 않음</span>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side">
+      <section class="panel">
+        <h2>푸른 얕은 바다 · 생태도</h2>
+        <div class="content">
+          <div class="eco-wrap">
+            <div class="eco-meta"><span>지역 생태도</span><span id="ecoText">0%</span></div>
+            <div class="bar"><div id="ecoBar"></div></div>
+          </div>
+          <div class="unlocks" id="unlocks"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>최근 포획</h2>
+        <div class="content" id="recent"><div class="empty">아직 기록이 없다.</div></div>
+      </section>
+
+      <section class="panel">
+        <h2>생물 도감</h2>
+        <div class="content" id="dex"><div class="empty">새로운 생물을 낚으면 기록된다.</div></div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="footer">판매 = 크레딧 · 방생 = 생태점수와 지역 생태도 · 첫 발견 = 연구 데이터</div>
+</div>
+
+<div class="modal" id="gameModal">
+  <div class="gamebox">
+    <h3>🎣 입질!</h3>
+    <p><b>초록 구간 안에 들어왔을 때 Space / Enter를 한 번</b> 누르면 된다.</p>
+    <div class="fish-lane">
+      <div class="sweet-zone"></div>
+      <div class="fish-marker" id="fishMarker">🐟</div>
+    </div>
+    <div class="hint" id="gameHint">천천히 움직임을 보고 타이밍을 맞춰보자.</div>
+    <button class="timingbtn" id="catchBtn">지금 낚아채기! <span class="key">SPACE / ENTER</span></button>
+  </div>
+</div>
+
+<div class="modal" id="catchModal">
+  <div class="modalbox">
+    <div class="catch-art" id="catchEmoji">🐟</div>
+    <h3 id="catchName">생물 이름</h3>
+    <div id="catchMeta"></div>
+    <p id="catchDesc"></p>
+    <div class="rewardline" id="rewardLine"></div>
+    <div class="modal-actions">
+      <button class="smallbtn" id="releaseBtn">🌊 놓아주기</button>
+      <button class="smallbtn" id="sellBtn">💰 판매하기</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal" id="shopModal">
+  <div class="modalbox">
+    <h3>🛒 탐사 보급 상점</h3>
+    <p>판매해서 얻은 크레딧으로 낚시를 조금 더 편하게 만들 수 있다.</p>
+    <div class="shopgrid" id="shopList"></div>
+    <button class="smallbtn" id="closeShop" style="width:100%;margin-top:10px">닫기</button>
+  </div>
+</div>
+
+
+<div class="modal" id="saveModal">
+  <div class="modalbox">
+    <h3>💾 브라우저 저장</h3>
+    <p>
+      진행도는 이 브라우저의 저장공간(localStorage)에 보관됩니다.<br>
+      같은 브라우저에서 다시 접속하면 이어서 할 수 있습니다.
+    </p>
+    <div class="shop-card">
+      <b>현재 저장 내용</b>
+      <small id="saveSummary">저장 정보를 불러오는 중...</small>
+    </div>
+    <div class="save-modal-actions">
+      <button class="smallbtn" id="manualSaveBtn">💾 지금 저장</button>
+      <button class="smallbtn" id="manualLoadBtn">📂 불러오기</button>
+      <button class="smallbtn danger" id="resetSaveBtn">♻️ 저장 초기화</button>
+      <button class="smallbtn" id="closeSaveBtn">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const creatures = [
+  {name:"방울꼬리어",emoji:"🫧🐟",rarity:"흔함",value:12,eco:1,ecoGain:2,min:10,max:24,speed:.30,desc:"헤엄칠 때마다 꼬리 끝에서 작은 공기방울이 하나씩 올라온다."},
+  {name:"초승달고기",emoji:"🌙🐠",rarity:"흔함",value:15,eco:1,ecoGain:2,min:12,max:30,speed:.34,desc:"몸이 얇고 휘어 있어 옆에서 보면 작은 초승달처럼 보인다."},
+  {name:"수초복어",emoji:"🌿🐡",rarity:"흔함",value:18,eco:2,ecoGain:3,min:9,max:22,speed:.28,desc:"등 쪽에 부드러운 수초가 자란다. 놀라면 수초까지 둥글게 부푼다."},
+  {name:"별비늘어",emoji:"⭐🐟",rarity:"희귀",value:35,eco:3,ecoGain:4,min:18,max:40,speed:.39,desc:"비늘 하나하나가 별빛처럼 반짝인다. 밤에 더 자주 발견된다."},
+  {name:"꽃지느러미",emoji:"🌸🐠",rarity:"희귀",value:38,eco:3,ecoGain:4,min:15,max:34,speed:.37,desc:"지느러미 끝이 꽃잎처럼 갈라져 있다. 물살에 흔들리는 모습이 아름답다."},
+  {name:"포도젤리어",emoji:"🍇🪼",rarity:"희귀",value:42,eco:4,ecoGain:5,min:20,max:48,speed:.35,desc:"말랑하고 투명한 몸 안에 보랏빛 구슬 같은 기관이 모여 있다."},
+  {name:"혜성송사리",emoji:"☄️🐟",rarity:"매우 희귀",value:90,eco:8,ecoGain:8,min:8,max:16,speed:.46,desc:"빠르게 헤엄칠 때 꼬리 뒤로 짧은 빛의 흔적이 남는다."},
+  {name:"오로라가오리",emoji:"🌈🛸",rarity:"매우 희귀",value:120,eco:10,ecoGain:10,min:45,max:88,speed:.43,desc:"넓은 지느러미에 여러 색의 빛이 천천히 흐른다."}
+];
+
+const shopItems = [
+  {id:"softRod",name:"🎣 유연한 낚싯대",price:80,desc:"물고기 이동속도 10% 감소"},
+  {id:"goodBait",name:"🪱 향긋한 미끼",price:110,desc:"희귀 이상 출현 확률 소폭 증가"},
+  {id:"wideGuide",name:"📡 유도 부표",price:160,desc:"타이밍 초록 구간을 조금 더 넓힘"}
+];
+
+let credits=120,ecoPoints=0,research=0,ecoLevel=0,casts=0;
+let currentCatch=null,pendingCatch=null;
+const discovered=new Map(),recent=[],owned=new Set();
+
+let sceneTick=0,lineSwing=0,lineDirection=1,fishingState="idle",bobberPulse=0;
+let miniRunning=false,fishPos=15,fishDir=1,fishVelocity=.3,miniLast=0,miniFrame=null,missCount=0;
+
+const $=id=>document.getElementById(id);
+
+const SAVE_KEY="alienFisher_v041";
+
+function save(showMessage=false){
+  const payload={
+    credits,ecoPoints,research,ecoLevel,casts,
+    discovered:[...discovered.keys()],
+    recent,
+    owned:[...owned],
+    savedAt:new Date().toISOString()
+  };
+  localStorage.setItem(SAVE_KEY,JSON.stringify(payload));
+  updateSaveStatus(payload.savedAt);
+  if(showMessage){
+    $("log").innerHTML="💾 현재 진행도를 이 브라우저에 저장했다.";
+  }
+}
+function load(showMessage=false){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw){
+      updateSaveStatus(null);
+      if(showMessage)$("log").innerHTML="저장된 진행도가 아직 없다.";
+      return false;
+    }
+    const d=JSON.parse(raw);
+
+    credits=d.credits??120;
+    ecoPoints=d.ecoPoints??0;
+    research=d.research??0;
+    ecoLevel=d.ecoLevel??0;
+    casts=d.casts??0;
+
+    discovered.clear();
+    recent.length=0;
+    owned.clear();
+
+    (d.discovered||[]).forEach(name=>{
+      const c=creatures.find(x=>x.name===name);
+      if(c)discovered.set(name,c);
+    });
+    (d.recent||[]).forEach(x=>recent.push(x));
+    (d.owned||[]).forEach(x=>owned.add(x));
+
+    updateSaveStatus(d.savedAt||null);
+    render();
+
+    if(showMessage)$("log").innerHTML="📂 브라우저에 저장된 진행도를 불러왔다.";
+    return true;
+  }catch(e){
+    if(showMessage)$("log").innerHTML="저장 데이터를 읽는 중 문제가 발생했다.";
+    return false;
+  }
+}
+
+function updateSaveStatus(savedAt){
+  const el=$("saveStatus");
+  if(!el)return;
+  if(!savedAt){
+    el.textContent="아직 저장되지 않음";
+    return;
+  }
+  const d=new Date(savedAt);
+  el.textContent="마지막 저장: "+d.toLocaleString("ko-KR");
+}
+
+function getSaveData(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    return raw?JSON.parse(raw):null;
+  }catch(e){
+    return null;
+  }
+}
+
+function renderSaveSummary(){
+  const d=getSaveData();
+  if(!d){
+    $("saveSummary").innerHTML="저장된 진행도가 없습니다.";
+    return;
+  }
+  const date=d.savedAt?new Date(d.savedAt).toLocaleString("ko-KR"):"시간 정보 없음";
+  $("saveSummary").innerHTML=
+    `마지막 저장: ${date}<br>`+
+    `💰 ${d.credits??0} cr · 🌱 ${d.ecoPoints??0} · 🔬 ${d.research??0}<br>`+
+    `📖 도감 ${(d.discovered||[]).length}/8 · 🎣 낚시 ${d.casts??0}회`;
+}
+
+function render(){
+  $("credits").textContent=credits;$("ecoPoints").textContent=ecoPoints;$("research").textContent=research;
+  $("dexCount").textContent=discovered.size;$("ecoText").textContent=Math.round(ecoLevel)+"%";
+  $("ecoBar").style.width=Math.min(100,ecoLevel)+"%";
+
+  let unlock=[];
+  if(ecoLevel<20) unlock.push("20% · 작은 발광어 출현 증가");
+  else unlock.push("✓ 20% · 작은 발광어 출현 증가");
+  if(ecoLevel<40) unlock.push("40% · 희귀종 출현률 증가");
+  else unlock.push("✓ 40% · 희귀종 출현률 증가");
+  if(ecoLevel<60) unlock.push("60% · 판매가 +10%");
+  else unlock.push("✓ 60% · 판매가 +10%");
+  if(ecoLevel<80) unlock.push("80% · 초록 구간 약간 확대");
+  else unlock.push("✓ 80% · 초록 구간 약간 확대");
+  if(ecoLevel<100) unlock.push("100% · 생태 완성 보너스");
+  else unlock.push("✓ 100% · 생태 완성!");
+  $("unlocks").innerHTML=unlock.join("<br>");
+
+  $("recent").innerHTML=recent.length?recent.slice(0,5).map(x=>`
+    <div class="fish-card">${x.emoji} <b>${x.name}</b><span class="badge">${x.rarity}</span>
+    <small>${x.size}cm · ${x.action}</small></div>`).join(""):`<div class="empty">아직 기록이 없다.</div>`;
+
+  $("dex").innerHTML=creatures.map(c=>{
+    if(!discovered.has(c.name))return `<div class="fish-card">❔ <b>???</b><small>아직 발견하지 못했다.</small></div>`;
+    return `<div class="fish-card">${c.emoji} <b>${c.name}</b><span class="badge">${c.rarity}</span><small>${c.desc}</small></div>`;
+  }).join("");
+
+  renderShop();
+}
+function renderShop(){
+  $("shopList").innerHTML=shopItems.map(i=>{
+    const has=owned.has(i.id),can=credits>=i.price;
+    return `<div class="shop-card ${has?'owned':''}">
+      <b>${i.name}</b>
+      <small>${i.desc}</small>
+      <button class="shopbtn" ${has?'disabled':''} onclick="buyItem('${i.id}')">
+        ${has?'보유 중':`${i.price} cr`}
+      </button>
+    </div>`;
+  }).join("");
+}
+
+function buyItem(id){
+  const item=shopItems.find(x=>x.id===id); if(!item||owned.has(id)||credits<item.price)return;
+  credits-=item.price;owned.add(id);
+  $("log").innerHTML=`${item.name}을(를) 구매했다.`;
+  save();render();
+}
+
+function waveLine(width,offset,chars){let s="";for(let i=0;i<width;i++)s+=chars[(i+offset)%chars.length];return s}
+function renderScene(){
+  sceneTick++; if(sceneTick%2===0){lineSwing+=lineDirection;if(lineSwing>=3||lineSwing<=-3)lineDirection*=-1;bobberPulse=(bobberPulse+1)%4}
+  const width=48,w1=waveLine(width,sceneTick%6,"~≈~~  "),w2=waveLine(width,(sceneTick+3)%7," ~~~≈ "),
+  w3=waveLine(width,(sceneTick+1)%5,"~~  ≈"),w4=waveLine(width,(sceneTick+4)%8," ≈~~~ ");
+  const starA=sceneTick%10<5?"✦":"·",starB=sceneTick%14<7?"·":"✧",starC=sceneTick%18<9?"✧":"·";
+  let lineX=23+lineSwing,line1=" ".repeat(Math.max(0,lineX))+"│",line2=" ".repeat(Math.max(0,lineX+(lineSwing>0?1:0)))+"│",
+  line3=" ".repeat(Math.max(0,lineX+(lineSwing<0?-1:1)))+"│",hookChar=fishingState==="waiting"?["•","◦","●","◦"][bobberPulse]:"🎣",
+  hook=" ".repeat(Math.max(0,lineX+(lineSwing<0?-1:1)))+hookChar;
+  let status="바람이 잔잔하다.\n수면 위로 작은 빛무리가 떠다닌다.";
+  if(fishingState==="casting")status="낚싯줄이 부드럽게 호를 그리며 날아간다...";
+  if(fishingState==="waiting")status="찌가 파도에 맞춰 천천히 흔들린다.\n가끔 작은 기포가 수면 위로 올라온다.";
+  if(fishingState==="hooked")status="낚싯줄이 팽팽하게 당겨졌다!\n물고기가 천천히 좌우로 움직인다.";
+  $("ascii").textContent=`      ${starA}         ·             ${starB}
+   ·              🪐                 ${starC}
+
+ ${w1}
+ ${w2}
+ ${w3}
+ ${w4}
+${line1}
+${line2}
+${line3}
+${hook}
+
+${status}
+
+[ SPACE / ENTER ] 낚시 시작`;
+}
+setInterval(renderScene,150);
+
+function weightedCatch(){
+  let rareBoost=(owned.has("goodBait")?0.08:0)+(ecoLevel>=40?0.05:0);
+  let r=Math.random();
+  if(r<.58-rareBoost)return creatures[Math.floor(Math.random()*3)];
+  if(r<.93)return creatures[3+Math.floor(Math.random()*3)];
+  return creatures[6+Math.floor(Math.random()*2)];
+}
+
+function startFishing(){
+  if(fishingState!=="idle"||miniRunning||$("catchModal").classList.contains("show"))return;
+  casts++;fishingState="casting";$("fishBtn").disabled=true;
+  $("log").innerHTML=`[${casts}번째 낚시] 낚싯대를 크게 휘둘렀다...`;
+  setTimeout(()=>{fishingState="waiting";$("log").innerHTML+=`<br>찌가 수면에 내려앉았다.`},650);
+  setTimeout(()=>{pendingCatch=weightedCatch();fishingState="hooked";$("log").innerHTML+=`<br><b>입질이다!</b> 물고기의 움직임을 보자.`;startMiniGame(pendingCatch)},1800+Math.random()*1000);
+}
+
+function currentZone(){
+  let left=32,width=36;
+  if(owned.has("wideGuide")){left-=4;width+=8}
+  if(ecoLevel>=80){left-=3;width+=6}
+  return {left,width,right:left+width};
+}
+
+function startMiniGame(c){
+  miniRunning=true;fishPos=12+Math.random()*76;fishDir=Math.random()>.5?1:-1;
+  fishVelocity=c.speed*(owned.has("softRod")?.9:1);miniLast=performance.now();missCount=0;
+  const z=currentZone();document.querySelector(".sweet-zone").style.left=z.left+"%";document.querySelector(".sweet-zone").style.width=z.width+"%";
+  $("fishMarker").textContent=c.emoji.includes("🛸")?"🛸":"🐟";$("fishMarker").style.left=fishPos+"%";
+  $("gameHint").textContent=`${c.name}이(가) 움직인다. 초록 구간 안에서 한 번 누르면 된다.`;
+  $("gameModal").classList.add("show");cancelAnimationFrame(miniFrame);miniFrame=requestAnimationFrame(miniLoop);
+}
+function miniLoop(now){
+  if(!miniRunning)return;const dt=Math.min(34,now-miniLast);miniLast=now;
+  const wobble=Math.sin(now/420)*.06;fishPos+=fishDir*(fishVelocity+wobble)*dt*.12;
+  if(fishPos>=95){fishPos=95;fishDir=-1}else if(fishPos<=5){fishPos=5;fishDir=1}
+  $("fishMarker").style.left=fishPos+"%";miniFrame=requestAnimationFrame(miniLoop);
+}
+function tryCatch(){
+  if(!miniRunning)return;const z=currentZone(),success=fishPos>=z.left&&fishPos<=z.right;
+  if(success)succeedMiniGame();
+  else{$("gameHint").textContent=++missCount<2?"조금 빨랐거나 늦었다. 다시 천천히 맞춰보자.":"괜찮아. 물고기가 초록 구간 중앙쯤 왔을 때 눌러보자."}
+}
+function succeedMiniGame(){
+  miniRunning=false;cancelAnimationFrame(miniFrame);$("gameModal").classList.remove("show");
+  const c=pendingCatch,size=Math.floor(c.min+Math.random()*(c.max-c.min+1)),isNew=!discovered.has(c.name);
+  currentCatch={...c,size,isNew};if(isNew){discovered.set(c.name,c);research++}
+  pendingCatch=null;fishingState="idle";$("fishBtn").disabled=false;
+  const sale=Math.round(c.value*(ecoLevel>=60?1.1:1));
+  currentCatch.saleValue=sale;
+  $("catchEmoji").textContent=c.emoji;$("catchName").textContent=c.name;
+  $("catchMeta").innerHTML=`크기 ${size}cm · ${c.rarity}`;
+  $("catchDesc").textContent=`"${c.desc}"`;
+  $("rewardLine").innerHTML=`💰 판매: +${sale} cr &nbsp; | &nbsp; 🌊 놓아주기: +${c.eco} 생태점수 · 생태도 +${c.ecoGain}% ${isNew?`<br>🔬 첫 발견 보너스: 연구 데이터 +1`:""}`;
+  $("catchModal").classList.add("show");$("log").innerHTML=`<b>${c.name}</b>을(를) 무사히 낚았다!`;
+  save();render();
+}
+function finishCatch(action){
+  if(!currentCatch)return;
+  if(action==="판매"){
+    credits+=currentCatch.saleValue;
+    $("log").innerHTML=`${currentCatch.name}을(를) 연구소 매입함에 보냈다.<br>+${currentCatch.saleValue} cr`;
+  }else{
+    ecoPoints+=currentCatch.eco;ecoLevel=Math.min(100,ecoLevel+currentCatch.ecoGain);
+    let extra=ecoLevel>=100?`<br>이 바다의 생태가 완전히 안정되었다. ✨`:"";
+    $("log").innerHTML=`${currentCatch.name}을(를) 다시 바다로 돌려보냈다.<br>+${currentCatch.eco} 🌱 · 생태도 +${currentCatch.ecoGain}%${extra}`;
+  }
+  recent.unshift({...currentCatch,action});if(recent.length>10)recent.pop();
+  currentCatch=null;$("catchModal").classList.remove("show");save();render();
+}
+
+$("fishBtn").addEventListener("click",startFishing);$("catchBtn").addEventListener("click",tryCatch);
+document.addEventListener("keydown",e=>{
+  if(e.repeat)return;
+  if(e.code==="Space"||e.code==="Enter"){e.preventDefault();if(miniRunning)tryCatch();else startFishing()}
+});
+$("restBtn").addEventListener("click",()=>{
+  const texts=["낚싯대를 옆에 두고 따뜻한 음료를 마셨다.<br>멀리 작은 위성이 천천히 떠오른다.","잠시 바다를 바라봤다.<br>파도 소리 외에는 아무것도 들리지 않는다.","수면 위를 작은 발광생물들이 지나간다.<br>오늘은 유난히 평화롭다."];
+  $("log").innerHTML=texts[Math.floor(Math.random()*texts.length)]
+});
+$("shopBtn").addEventListener("click",()=>{$("shopModal").classList.add("show");renderShop()});
+$("closeShop").addEventListener("click",()=>$("shopModal").classList.remove("show"));
+
+$("saveBtn").addEventListener("click",()=>{
+  renderSaveSummary();
+  $("saveModal").classList.add("show");
+});
+$("closeSaveBtn").addEventListener("click",()=>$("saveModal").classList.remove("show"));
+
+$("manualSaveBtn").addEventListener("click",()=>{
+  save(true);
+  renderSaveSummary();
+});
+
+$("manualLoadBtn").addEventListener("click",()=>{
+  load(true);
+  renderSaveSummary();
+});
+
+$("resetSaveBtn").addEventListener("click",()=>{
+  const ok=confirm("브라우저에 저장된 외계어부 진행도를 정말 초기화할까요? 이 작업은 되돌릴 수 없습니다.");
+  if(!ok)return;
+
+  localStorage.removeItem(SAVE_KEY);
+  credits=120;
+  ecoPoints=0;
+  research=0;
+  ecoLevel=0;
+  casts=0;
+  currentCatch=null;
+  pendingCatch=null;
+  discovered.clear();
+  recent.length=0;
+  owned.clear();
+  updateSaveStatus(null);
+  render();
+  renderSaveSummary();
+  $("log").innerHTML="♻️ 저장 데이터와 현재 진행도를 초기화했다.";
+});
+$("clearBtn").addEventListener("click",()=>{$("log").innerHTML="기록 화면을 정리했다.<br>바다는 여전히 잔잔하다."});
+$("releaseBtn").addEventListener("click",()=>finishCatch("방생"));$("sellBtn").addEventListener("click",()=>finishCatch("판매"));
+
+load();render();renderScene();
+
+window.addEventListener("beforeunload",()=>save(false));
+document.addEventListener("visibilitychange",()=>{
+  if(document.visibilityState==="hidden")save(false);
+});
+</script>
+</body>
+</html>
